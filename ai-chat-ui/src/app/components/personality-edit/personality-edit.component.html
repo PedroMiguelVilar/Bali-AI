@@ -1,0 +1,153 @@
+<div class="min-h-screen theme-bg theme-text">
+  <div class="max-w-4xl px-6 py-12 mx-auto space-y-8" *ngIf="!loading; else loadingTpl">
+    <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="uppercase tracking-[0.3em] text-xs theme-muted">Edit</p>
+        <h1 class="text-3xl font-semibold">Edit personality</h1>
+        <p class="text-sm theme-muted">
+          Update the prompt, traits, or model. Slug stays the same.
+        </p>
+      </div>
+      <a routerLink="/" class="text-sm theme-accent hover:underline">Back to list</a>
+    </header>
+
+    <div *ngIf="error" class="p-3 text-sm border rounded-xl theme-border theme-panel">
+      {{ error }}
+    </div>
+    <div *ngIf="message" class="p-3 text-sm border rounded-xl border-emerald-500 bg-emerald-500/10">
+      {{ message }}
+    </div>
+
+    <form *ngIf="form" class="space-y-4" (ngSubmit)="save()">
+      <div class="grid gap-4 md:grid-cols-2">
+        <label class="space-y-2 text-sm font-semibold">
+          <span class="theme-muted uppercase tracking-[0.2em] text-xs">Name</span>
+          <input
+            class="w-full px-3 py-3 rounded-xl theme-panel border theme-border"
+            type="text"
+            name="name"
+            [(ngModel)]="form.name"
+            required
+          />
+        </label>
+
+        <label class="space-y-2 text-sm font-semibold">
+          <span class="theme-muted uppercase tracking-[0.2em] text-xs">Model</span>
+          <select
+            class="w-full px-3 py-3 rounded-xl theme-panel border theme-border"
+            name="model"
+            [(ngModel)]="form.model"
+            required
+          >
+            <option *ngFor="let model of options.models" [value]="model.name">
+              {{ model.label || model.name }} ({{ model.provider || 'model' }})
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <label class="space-y-2 text-sm font-semibold block">
+        <span class="theme-muted uppercase tracking-[0.2em] text-xs">Description (optional)</span>
+        <input
+          class="w-full px-3 py-3 rounded-xl theme-panel border theme-border"
+          type="text"
+          name="description"
+          [(ngModel)]="form.description"
+          placeholder="One-line summary"
+        />
+      </label>
+
+      <label class="space-y-2 text-sm font-semibold">
+        <span class="theme-muted uppercase tracking-[0.2em] text-xs">Base prompt</span>
+        <textarea
+          class="w-full px-3 py-3 rounded-xl theme-panel border theme-border min-h-[140px]"
+          name="basePrompt"
+          [(ngModel)]="form.basePrompt"
+          required
+        ></textarea>
+      </label>
+
+      <div class="space-y-2">
+        <span class="theme-muted uppercase tracking-[0.2em] text-xs">Traits</span>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            *ngFor="let trait of options.traitPresets"
+            (click)="toggleTrait(trait.key)"
+            class="px-3 py-2 rounded-lg border theme-border theme-panel text-left transition-all flex items-center gap-2"
+            [ngClass]="{'border-emerald-400 bg-emerald-500/10 shadow-sm scale-[1.01]': form!.traits?.includes(trait.key)}"
+          >
+            <span
+              class="inline-flex h-5 w-5 rounded-full border border-current items-center justify-center text-[10px]"
+              [ngClass]="{
+                'bg-emerald-400 text-slate-900 border-emerald-400': form!.traits?.includes(trait.key),
+                'theme-muted': !form!.traits?.includes(trait.key)
+              }"
+              aria-hidden="true"
+            >
+              ✓
+            </span>
+            <span>
+              <div class="text-sm font-semibold">{{ trait.label }}</div>
+              <div class="text-xs theme-muted">{{ trait.description }}</div>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <span class="theme-muted uppercase tracking-[0.2em] text-xs">Appearance</span>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            type="button"
+            *ngFor="let appearance of options.appearancePresets"
+            (click)="selectAppearance(appearance.id)"
+            class="p-3 rounded-xl border theme-border theme-panel text-left flex justify-between gap-2 transition-all"
+            [ngClass]="{'border-emerald-400 bg-emerald-500/10 shadow-sm scale-[1.01]': form!.appearancePreset === appearance.id}"
+          >
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2 font-semibold">
+                <span>{{ appearance.avatar }}</span>
+                <span>{{ appearance.label }}</span>
+              </div>
+              <div class="text-xs theme-muted">{{ appearance.description }}</div>
+            </div>
+            <span
+              class="inline-flex h-6 w-6 rounded-full border border-current items-center justify-center text-[11px]"
+              [ngClass]="{
+                'bg-emerald-400 text-slate-900 border-emerald-400': form!.appearancePreset === appearance.id,
+                'theme-muted': form!.appearancePreset !== appearance.id
+              }"
+              aria-hidden="true"
+            >
+              ✓
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          class="px-4 py-2 font-semibold rounded-full theme-accent-bg text-[#031019] hover:-translate-y-0.5 transition-all disabled:opacity-60"
+          [disabled]="saving"
+        >
+          {{ saving ? 'Saving...' : 'Save changes' }}
+        </button>
+        <button
+          type="button"
+          class="text-sm theme-muted hover:underline"
+          (click)="openChat()"
+        >
+          Open chat
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <ng-template #loadingTpl>
+    <div class="min-h-screen flex items-center justify-center theme-muted">
+      Loading...
+    </div>
+  </ng-template>
+</div>

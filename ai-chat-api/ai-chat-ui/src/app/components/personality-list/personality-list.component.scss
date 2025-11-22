@@ -1,0 +1,25 @@
+.card-shell {
+  perspective: 1600px;
+  position: relative;
+}
+
+.card-inner {
+  position: relative;
+  transition: transform 0.6s ease;
+  transform-style: preserve-3d;
+  min-height: 280px;
+}
+
+.card-shell.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.card-face.back {
+  transform: rotateY(180deg);
+}

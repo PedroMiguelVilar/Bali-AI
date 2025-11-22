@@ -1,0 +1,23 @@
+.conversation-item {
+  border: 1px solid transparent;
+  background: transparent;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    transform 120ms ease;
+}
+
+.conversation-item:hover {
+  background: color-mix(
+    in srgb,
+    var(--theme-panel) 90%,
+    var(--theme-surface)
+  );
+  border-color: var(--theme-border);
+  transform: translateX(2px);
+}
+
+.danger-hover:hover {
+  background: var(--theme-danger);
+  color: #fff;
+}

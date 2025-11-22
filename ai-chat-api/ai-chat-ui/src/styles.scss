@@ -1,0 +1,108 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --theme-background: #fff7fb;
+  --theme-surface: #ffeaf3;
+  --theme-panel: #ffd8e8;
+  --theme-text: #2c0f24;
+  --theme-muted: #7a3b5c;
+  --theme-border: #f7c0d8;
+  --theme-accent: #ff5fa2;
+  --theme-accent-muted: #ffc3de;
+  --theme-accent-contrast: #290a18;
+  --theme-input: #ffeef6;
+  --theme-success: #16a34a;
+  --theme-warning: #f59e0b;
+  --theme-danger: #ef4444;
+  --theme-gradient: linear-gradient(135deg, #ffe7f1 0%, #ffd4e7 100%);
+  --theme-cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='48' viewBox='0 0 24 24'><path fill='%23FFBCF6' stroke='%23000' stroke-width='2' d='M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z'/></svg>"), auto;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  cursor: var(--theme-cursor, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='48' viewBox='0 0 24 24'><path fill='%23FFBCF6' stroke='%23000' stroke-width='2' d='M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.85a.5.5 0 0 0-.85.35Z'/></svg>"), auto);
+  background: var(--theme-gradient, var(--theme-background));
+  color: var(--theme-text);
+  transition: background 200ms ease, color 200ms ease;
+}
+
+.theme-bg {
+  background: var(--theme-background);
+}
+
+.theme-surface {
+  background: var(--theme-surface);
+}
+
+.theme-panel {
+  background: var(--theme-panel);
+}
+
+.theme-border {
+  border-color: var(--theme-border);
+}
+
+.theme-text {
+  color: var(--theme-text);
+}
+
+.theme-muted {
+  color: var(--theme-muted);
+}
+
+.theme-accent {
+  color: var(--theme-accent);
+}
+
+.theme-accent-bg {
+  background: var(--theme-accent);
+  color: var(--theme-accent-contrast);
+}
+
+.theme-bar {
+  margin-top: 12px;
+  max-width: 820px;
+  width: 100%;
+}
+
+.theme-bar.align-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.theme-input {
+  background: var(--theme-input);
+  color: var(--theme-text);
+}
+
+.btn-accent {
+  background: linear-gradient(
+    120deg,
+    var(--theme-accent),
+    var(--theme-accent-muted)
+  );
+  color: var(--theme-accent-contrast);
+  border: 1px solid color-mix(
+    in srgb,
+    var(--theme-accent),
+    var(--theme-border)
+  );
+}
+
+.btn-ghost {
+  background: var(--theme-panel);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 6px;
+}

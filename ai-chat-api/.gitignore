@@ -1,0 +1,22 @@
+# Root ignores for monorepo layout
+node_modules/
+dist/
+
+# Backend (ai-chat-api)
+ai-chat-api/node_modules/
+ai-chat-api/dist/
+ai-chat-api/.env
+ai-chat-api/.env.local
+ai-chat-api/.env.*.local
+
+# Frontend (ai-chat-ui)
+ai-chat-ui/node_modules/
+ai-chat-ui/dist/
+ai-chat-ui/.angular/
+ai-chat-ui/coverage/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

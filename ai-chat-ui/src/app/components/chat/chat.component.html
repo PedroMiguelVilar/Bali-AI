@@ -1,0 +1,224 @@
+<div class="flex flex-col w-screen h-screen theme-bg theme-text">
+  <!-- Header -->
+  <div
+    class="flex flex-col gap-4 p-4 theme-surface border-b theme-border shadow md:flex-row md:items-center md:justify-between"
+  >
+    <div class="flex flex-col gap-1 md:flex-1">
+      <p class="text-xs font-semibold tracking-[0.5em] theme-muted uppercase">
+        Chatting with
+      </p>
+      <h1 class="mt-2 text-2xl font-semibold">
+        {{ personality?.name || personalitySlug || 'Preparing chat...' }}
+      </h1>
+      <p *ngIf="personality?.model" class="text-sm font-normal theme-muted">
+        Model: {{ personality?.model }}
+      </p>
+    </div>
+    <div
+      class="flex flex-wrap items-center gap-2 text-sm font-normal md:justify-end md:flex-shrink-0"
+    >
+      <button
+        class="px-3 py-1 text-sm rounded btn-accent hover:opacity-90 transition"
+        (click)="navigateToPersonalityList()"
+      >
+        Switch Personality
+      </button>
+      <button
+        class="px-3 py-1 text-sm rounded btn-ghost hover:opacity-90"
+        (click)="exportConversation()"
+        title="Download conversation as JSON"
+      >
+        Export
+      </button>
+      <button
+        class="px-3 py-1 text-sm rounded btn-ghost hover:opacity-90"
+        (click)="isDrawerOpen = !isDrawerOpen"
+      >
+        {{ isDrawerOpen ? "Hide Menu" : "Show Menu" }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Main Layout: Sidebar + Chat -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- Sidebar Drawer -->
+    <div class="relative">
+      <div
+        class="absolute top-0 left-0 z-10 h-full overflow-y-auto transition-transform duration-300 ease-in-out w-72"
+        [ngClass]="isDrawerOpen ? 'translate-x-0' : '-translate-x-full'"
+      >
+        <ng-container *ngIf="personalityId as personaId">
+          <app-conversation-drawer
+            [userId]="userId"
+            [personalityId]="personaId"
+            [creationLocked]="isCreatingConversation || isPersonalityLoading"
+            (conversationSelected)="onConversationSelected($event)"
+            (createConversationRequested)="handleNewConversationRequest()"
+            (drawerClose)="handleDrawerClose()"
+          ></app-conversation-drawer>
+        </ng-container>
+      </div>
+    </div>
+
+    <div
+      *ngIf="isDrawerOpen"
+      class="fixed inset-0 z-0 bg-black bg-opacity-40"
+      (click)="isDrawerOpen = false"
+    ></div>
+
+    <!-- Chat Area -->
+    <div class="flex flex-col flex-1">
+      <!-- Messages -->
+      <div class="flex-1 px-4 py-6 space-y-4 overflow-y-auto" id="chat-window">
+        <ng-container
+          *ngIf="!isPersonalityLoading && !personalityError; else personalityState"
+        >
+          <div
+            *ngIf="isCreatingConversation && !messages.length"
+            class="text-center text-sm theme-muted py-6"
+          >
+            Initializing conversation...
+          </div>
+
+          <div
+            *ngFor="let msg of messages"
+            class="message-group flex flex-col gap-1 animate-fade-in"
+            [ngClass]="{
+              'items-end': msg.sender === 'user',
+              'items-start': msg.sender !== 'user',
+              'ai-message': msg.sender === 'ai'
+            }"
+          >
+            <div
+              [ngClass]="
+                msg.sender === 'user'
+                  ? 'chat-bubble-user'
+                  : 'chat-bubble-ai'
+              "
+              class="chat-bubble px-5 py-3 max-w-[75%] text-[15px] leading-relaxed rounded-chat shadow-md transition-all duration-200 transform hover:scale-[1.02]"
+            >
+              <div class="message-text" [innerHTML]="msg.text"></div>
+            </div>
+
+            <div
+              *ngIf="msg.sender === 'ai' && msg.id"
+              class="feedback-row flex items-center gap-2 px-1 text-xs font-medium theme-muted justify-start"
+            >
+              <button
+                class="feedback-chip"
+                [class.active-up]="msg.feedback === 'up'"
+                [disabled]="feedbackSubmittingId === msg.id"
+                (click)="rateMessage(msg, 'up')"
+                type="button"
+              >
+                <span class="icon">👍</span>
+                <span>Good</span>
+              </button>
+              <button
+                class="feedback-chip"
+                [class.active-down]="msg.feedback === 'down'"
+                [disabled]="feedbackSubmittingId === msg.id"
+                (click)="rateMessage(msg, 'down')"
+                type="button"
+              >
+                <span class="icon">👎</span>
+                <span>Bad</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Loading Indicator -->
+          <div
+            *ngIf="isLoading"
+            class="flex items-center gap-2 text-sm italic theme-muted"
+          >
+            <div
+              class="chat-bubble-user px-5 py-4 rounded-2xl max-w-[75%] text-sm flex gap-2 items-center min-h-[48px]"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-white animate-typing-dot-1"
+              ></span>
+              <span
+                class="w-2 h-2 rounded-full bg-white animate-typing-dot-2"
+              ></span>
+              <span
+                class="w-2 h-2 rounded-full bg-white animate-typing-dot-3"
+              ></span>
+            </div>
+          </div>
+
+          <!-- User Typing Indicator -->
+        <div *ngIf="isTyping" class="flex justify-end">
+          <div
+            class="chat-bubble-user px-5 py-3 rounded-2xl max-w-[75%] text-sm flex gap-1 items-center min-h-[48px]"
+          >
+            <div
+              class="w-2.5 h-2.5 rounded-full bg-white animate-typing-dot-1"
+            ></div>
+              <div
+                class="w-2.5 h-2.5 rounded-full bg-white animate-typing-dot-2"
+              ></div>
+              <div
+                class="w-2.5 h-2.5 rounded-full bg-white animate-typing-dot-3"
+              ></div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <ng-template #personalityState>
+        <div
+          class="flex items-center justify-center w-full h-full px-6 text-center"
+        >
+          <div *ngIf="isPersonalityLoading" class="text-lg theme-muted">
+            Connecting to
+            {{ personality?.name || personalitySlug || 'your AI' }}...
+          </div>
+          <div
+            *ngIf="!isPersonalityLoading && personalityError"
+            class="max-w-md space-y-4"
+          >
+            <p class="text-lg font-semibold theme-text">
+              {{ personalityError }}
+            </p>
+            <button
+              class="w-full px-4 py-2 text-sm font-semibold rounded-xl btn-accent hover:opacity-90"
+              (click)="retryPersonalityLoad()"
+            >
+              Try Again
+            </button>
+            <button
+              class="w-full px-4 py-2 text-sm font-semibold rounded-xl btn-ghost hover:opacity-90"
+              (click)="navigateToPersonalityList()"
+            >
+              Choose another personality
+            </button>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Input -->
+      <div
+        class="flex items-center gap-2 p-4 theme-surface border-t theme-border"
+      >
+        <input
+          type="text"
+          [(ngModel)]="input"
+          (keydown)="onType()"
+          (keyup.enter)="sendMessage()"
+          class="flex-1 px-4 py-2 rounded-xl focus:outline-none disabled:opacity-50 theme-input theme-border"
+          placeholder="Type your message..."
+          [disabled]="isLoading || !personalityId"
+        />
+        <button
+          (click)="sendMessage()"
+          [disabled]="isLoading || !input.trim() || !personalityId"
+          class="px-6 py-2 btn-accent hover:opacity-90 rounded-xl disabled:opacity-50"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+<div
+  class="theme-menu"
+  (mouseenter)="onHoverEnter()"
+  (mouseleave)="onHoverLeave()"
+  (click)="onHoverEnter()"
+>
+  <button
+    type="button"
+    class="trigger theme-border theme-surface"
+    [disabled]="isLoading || !themes.length"
+  >
+    <span class="label">Theme</span>
+    <span class="value">{{ currentThemeLabel }}</span>
+    <span class="chevron">▾</span>
+  </button>
+
+  <div class="dropdown theme-panel theme-border" *ngIf="menuOpen && themes.length">
+    <div
+      class="option theme-surface theme-border"
+      *ngFor="let theme of themes"
+      [class.active]="theme.slug === activeSlug"
+      (click)="select(theme.slug)"
+    >
+      <span
+        class="swatch"
+        [style.background]="theme.gradient || theme.palette.accent"
+      ></span>
+      <div class="option-meta">
+        <span class="name">{{ theme.name }}</span>
+        <span class="muted">{{ theme.slug }} · {{ theme.mode }}</span>
+      </div>
+    </div>
+  </div>
+</div>

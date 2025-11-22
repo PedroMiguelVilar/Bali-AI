@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat</title>
+    <style>
+      :root {
+        --bg: #0b0f1a;
+        --surface: #111827;
+        --panel: #151c2e;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --border: #1f2937;
+        --accent: #22d3ee;
+        --accent-weak: #0ea5e9;
+        --accent-contrast: #031019;
+        --success: #22c55e;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          'Inter',
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+      }
+
+      .app {
+        width: min(1100px, 100%);
+        padding: 24px;
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(
+          135deg,
+          rgba(34, 211, 238, 0.08),
+          rgba(255, 255, 255, 0)
+        );
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .title {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .title h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+
+      select,
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      .control-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      select,
+      button {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition:
+          transform 120ms ease,
+          box-shadow 120ms ease,
+          border-color 120ms ease;
+      }
+
+      select:focus,
+      button:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: var(--accent-contrast);
+        border-color: transparent;
+        box-shadow: 0 12px 30px rgba(34, 211, 238, 0.35);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        border-color: var(--accent-weak);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .status {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .chat {
+        margin-top: 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 14px;
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.02),
+          0 20px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      .messages {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 4px;
+      }
+
+      .message {
+        max-width: 75%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+        white-space: pre-wrap;
+        line-height: 1.5;
+        position: relative;
+      }
+
+      .message.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, var(--accent), var(--accent-weak));
+        color: var(--accent-contrast);
+        border: none;
+      }
+
+      .message.ai {
+        align-self: flex-start;
+        background: var(--panel);
+      }
+
+      .meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .feedback {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .feedback button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border-color: var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        font-size: 13px;
+      }
+
+      .feedback button .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .feedback button.active.up {
+        border-color: var(--success);
+        color: var(--success);
+      }
+
+      .feedback button.active.down {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .composer {
+        margin-top: 6px;
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+
+      textarea {
+        flex: 1;
+        min-height: 60px;
+        max-height: 140px;
+        resize: vertical;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        line-height: 1.4;
+      }
+
+      input[type='text'],
+      select,
+      textarea {
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .section-card {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(34, 211, 238, 0.06)
+        );
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 10px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      .creator-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .eyebrow {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        font-size: 12px;
+      }
+
+      .builder {
+        display: grid;
+        gap: 12px;
+        margin-top: 6px;
+      }
+
+      .builder-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+      }
+
+      .pill-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        transition: all 120ms ease;
+        text-align: left;
+        color: var(--text);
+      }
+
+      .pill .title {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .pill .sub {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .pill.active {
+        border-color: var(--accent);
+        background: rgba(34, 211, 238, 0.14);
+        color: var(--accent);
+        box-shadow: 0 6px 16px rgba(34, 211, 238, 0.18);
+      }
+
+      .appearance-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .appearance-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        transition: all 140ms ease;
+        display: grid;
+        gap: 6px;
+      }
+
+      .appearance-card:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent-weak);
+      }
+
+      .appearance-card.active {
+        border-color: var(--accent);
+        box-shadow: 0 10px 22px rgba(34, 211, 238, 0.24);
+      }
+
+      .helper {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .slug {
+        font-family: monospace;
+        font-size: 13px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.02);
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px dashed var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .creator-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 800px) {
+        .message {
+          max-width: 90%;
+        }
+
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .control-row {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="title">
+          <h1>AI Chat</h1>
+        </div>
+        <div class="control-row">
+          <select id="personalitySelect"></select>
+          <button id="newConversationBtn" type="button">
+            New conversation
+          </button>
+          <button id="toggleCreatorBtn" type="button">New personality</button>
+        </div>
+        <div class="status" id="statusText">Ready</div>
+      </header>
+
+      <section class="section-card" id="creatorCard" style="display: none">
+        <div class="creator-head">
+          <div>
+            <div class="eyebrow">Choose your guide</div>
+            <h3 style="margin: 4px 0 0">Create a personality</h3>
+            <p class="helper" style="margin: 6px 0 0">
+              Pick a model, add a base prompt, and choose traits so teammates
+              can reuse it.
+            </p>
+          </div>
+        </div>
+
+        <form id="creatorForm" class="builder">
+          <div class="builder-grid">
+            <div class="field">
+              <label for="creatorName">Name</label>
+              <input
+                id="creatorName"
+                type="text"
+                placeholder="Balanced Guide"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="creatorSlug">Slug (optional)</label>
+              <input
+                id="creatorSlug"
+                type="text"
+                placeholder="balanced-guide"
+              />
+            </div>
+            <div class="field">
+              <label for="creatorModel">Model</label>
+              <select id="creatorModel"></select>
+            </div>
+            <div class="field">
+              <label for="creatorAvatar">Avatar / emoji</label>
+              <input
+                id="creatorAvatar"
+                type="text"
+                placeholder="✨"
+                maxlength="8"
+              />
+            </div>
+            <div class="field">
+              <label for="creatorAccent">Accent color</label>
+              <input id="creatorAccent" type="text" placeholder="#22d3ee" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="creatorPrompt">Base prompt</label>
+            <textarea
+              id="creatorPrompt"
+              rows="4"
+              placeholder="How should this personality behave?"
+              required
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label for="creatorDescription">Short description (optional)</label>
+            <textarea
+              id="creatorDescription"
+              rows="2"
+              placeholder="One-line summary"
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label>Traits (pick a few)</label>
+            <div class="pill-row" id="traitChoices"></div>
+          </div>
+
+          <div class="field">
+            <label>Appearance</label>
+            <div class="appearance-grid" id="appearanceChoices"></div>
+          </div>
+
+          <div class="creator-actions">
+            <button class="primary" type="submit" id="creatorSubmit">
+              Create personality
+            </button>
+            <span class="status" id="creatorStatus"
+              >Fill the form to create.</span
+            >
+          </div>
+        </form>
+      </section>
+
+      <section class="chat">
+        <div class="messages" id="messages"></div>
+
+        <form class="composer" id="composerForm">
+          <textarea
+            id="messageInput"
+            placeholder="Type your message..."
+            required
+          ></textarea>
+          <button class="primary" type="submit" id="sendBtn">Send</button>
+        </form>
+      </section>
+    </div>
+
+    <script>
+      const state = {
+        userId: 1,
+        personalities: [],
+        personalityBySlug: {},
+        selectedPersonality: null,
+        conversationId: null,
+        messages: [],
+        sending: false,
+        creating: false,
+        creation: {
+          name: '',
+          slug: '',
+          model: '',
+          basePrompt: '',
+          description: '',
+          accentColor: '',
+          avatar: '',
+          traits: [],
+          appearancePreset: '',
+        },
+        options: {
+          models: [],
+          traitPresets: [],
+          appearancePresets: [],
+        },
+      };
+
+      const dom = {
+        personalitySelect: document.getElementById('personalitySelect'),
+        messages: document.getElementById('messages'),
+        status: document.getElementById('statusText'),
+        messageInput: document.getElementById('messageInput'),
+        sendBtn: document.getElementById('sendBtn'),
+        composerForm: document.getElementById('composerForm'),
+        newConversationBtn: document.getElementById('newConversationBtn'),
+        creatorCard: document.getElementById('creatorCard'),
+        creatorForm: document.getElementById('creatorForm'),
+        creatorName: document.getElementById('creatorName'),
+        creatorSlug: document.getElementById('creatorSlug'),
+        creatorModel: document.getElementById('creatorModel'),
+        creatorPrompt: document.getElementById('creatorPrompt'),
+        creatorDescription: document.getElementById('creatorDescription'),
+        creatorAccent: document.getElementById('creatorAccent'),
+        creatorAvatar: document.getElementById('creatorAvatar'),
+        traitChoices: document.getElementById('traitChoices'),
+        appearanceChoices: document.getElementById('appearanceChoices'),
+        creatorStatus: document.getElementById('creatorStatus'),
+        creatorSubmit: document.getElementById('creatorSubmit'),
+        toggleCreatorBtn: document.getElementById('toggleCreatorBtn'),
+        slugPreview: document.getElementById('slugPreview'),
+      };
+
+      const icons = {
+        up: '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M2 14h4v8H2zM22 11c0-1.1-.9-2-2-2h-5.31l.95-4.57.02-.22c0-.41-.17-.79-.44-1.06L14 2 7.59 8.41C7.22 8.78 7 9.3 7 9.83V20c0 1.1.9 2 2 2h7c.83 0 1.54-.5 1.85-1.22l3.02-7.05c.08-.2.13-.41.13-.63v-2.1z"/></svg>',
+        down: '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M2 2h4v8H2zM22 7c0 1.1-.9 2-2 2h-5.31l.95 4.57.02.22c0 .41-.17.79-.44 1.06L14 20l-6.41-6.41C7.22 13.22 7 12.7 7 12.17V2c0-1.1.9-2 2-2h7c.83 0 1.54.5 1.85 1.22l3.02 7.05c.08.2.13.41.13.63V7z"/></svg>',
+      };
+
+      function setStatus(text, isError = false) {
+        dom.status.textContent = text;
+        dom.status.style.color = isError ? 'var(--danger)' : 'var(--muted)';
+      }
+
+      async function fetchJson(url, options = {}) {
+        const res = await fetch(url, {
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        });
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(body || res.statusText);
+        }
+        if (res.status === 204) return null;
+        return res.json();
+      }
+
+      async function loadTheme() {
+        try {
+          const theme = await fetchJson('/themes/default');
+          applyTheme(theme);
+        } catch {
+          // keep defaults
+        }
+      }
+
+      function applyTheme(theme) {
+        if (!theme?.palette) return;
+        const p = theme.palette;
+        const map = {
+          '--bg': p.background,
+          '--surface': p.surface,
+          '--panel': p.panel,
+          '--text': p.text,
+          '--muted': p.mutedText,
+          '--border': p.border,
+          '--accent': p.accent,
+          '--accent-weak': p.accentMuted,
+          '--accent-contrast': p.accentContrast,
+          '--success': p.success,
+          '--danger': p.danger,
+        };
+        Object.entries(map).forEach(([key, value]) => {
+          if (value) document.documentElement.style.setProperty(key, value);
+        });
+      }
+
+      async function loadPersonalities() {
+        const personalities = await fetchJson('/personalities');
+        state.personalities = personalities || [];
+        state.personalityBySlug = {};
+        dom.personalitySelect.innerHTML = '';
+        state.personalities.forEach((p) => {
+          state.personalityBySlug[p.slug] = p;
+          const option = document.createElement('option');
+          option.value = p.slug;
+          option.textContent = `${p.name} (${p.model})`;
+          dom.personalitySelect.appendChild(option);
+        });
+        if (state.personalities.length) {
+          const defaultSlug = state.personalities[0].slug;
+          dom.personalitySelect.value = defaultSlug;
+          state.selectedPersonality = state.personalities[0];
+        }
+      }
+
+      async function loadCreatorOptions() {
+        const options = await fetchJson('/personalities/options');
+        state.options = options || {
+          models: [],
+          traitPresets: [],
+          appearancePresets: [],
+        };
+        renderModelOptions();
+        renderTraitChoices();
+        renderAppearanceChoices();
+      }
+
+      async function ensureConversation() {
+        if (!state.selectedPersonality) return;
+        const personalityId = state.selectedPersonality.id;
+        const existing = await fetchJson(
+          `/conversation/user/${state.userId}/personality/${personalityId}`,
+        );
+        if (existing && existing.length) {
+          state.conversationId = existing[0].id;
+        } else {
+          const created = await fetchJson('/conversation', {
+            method: 'POST',
+            body: JSON.stringify({ userId: state.userId, personalityId }),
+          });
+          state.conversationId = created?.id || null;
+        }
+        await refreshMessages();
+      }
+
+      async function refreshMessages() {
+        if (!state.conversationId) return;
+        const messages = await fetchJson(
+          `/conversation/${state.conversationId}/messages`,
+        );
+        state.messages = messages || [];
+        renderMessages();
+      }
+
+      function renderMessages() {
+        dom.messages.innerHTML = '';
+        state.messages.forEach((msg) => {
+          const bubble = document.createElement('div');
+          bubble.className = `message ${msg.sender}`;
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = msg.sender === 'ai' ? 'AI response' : 'You';
+          bubble.appendChild(meta);
+
+          const text = document.createElement('div');
+          text.textContent = msg.content || msg.text || '';
+          bubble.appendChild(text);
+
+          if (msg.sender === 'ai' && msg.id) {
+            const feedbackRow = document.createElement('div');
+            feedbackRow.className = 'feedback';
+
+            const upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.innerHTML = `${icons.up} <span>Good</span>`;
+            upBtn.classList.toggle('active', msg.feedback === 'up');
+            upBtn.classList.add('up');
+            upBtn.onclick = () => handleFeedback(msg.id, 'up');
+
+            const downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.innerHTML = `${icons.down} <span>Bad</span>`;
+            downBtn.classList.toggle('active', msg.feedback === 'down');
+            downBtn.classList.add('down');
+            downBtn.onclick = () => handleFeedback(msg.id, 'down');
+
+            feedbackRow.appendChild(upBtn);
+            feedbackRow.appendChild(downBtn);
+            bubble.appendChild(feedbackRow);
+          }
+
+          dom.messages.appendChild(bubble);
+        });
+        dom.messages.scrollTop = dom.messages.scrollHeight;
+      }
+
+      async function handleFeedback(messageId, feedback) {
+        const targetId = Number(messageId);
+        const message = state.messages.find((m) => Number(m.id) === targetId);
+        const prevFeedback = message?.feedback ?? null;
+        try {
+          setStatus('Submitting feedback...');
+          const nextFeedback = message?.feedback === feedback ? null : feedback;
+
+          // Optimistic update so the UI reflects the toggle immediately
+          state.messages = state.messages.map((m) =>
+            Number(m.id) === targetId
+              ? {
+                  ...m,
+                  feedback: nextFeedback,
+                  feedbackComment: nextFeedback === null ? null : m.feedbackComment,
+                  feedbackAt: nextFeedback === null ? null : m.feedbackAt,
+                }
+              : m,
+          );
+          renderMessages();
+
+          const result = await fetchJson(`/message/${targetId}/feedback`, {
+            method: 'POST',
+            body: JSON.stringify({
+              feedback: nextFeedback,
+              userId: state.userId,
+            }),
+          });
+
+          const finalFeedback =
+            result?.feedback === undefined ? nextFeedback : result.feedback;
+          const finalComment =
+            nextFeedback === null ? null : result?.feedbackComment ?? null;
+          const finalAt = nextFeedback === null ? null : result?.feedbackAt ?? null;
+          state.messages = state.messages.map((m) =>
+            Number(m.id) === targetId
+              ? {
+                  ...m,
+                  feedback: finalFeedback,
+                  feedbackComment: finalComment,
+                  feedbackAt: finalAt,
+                }
+              : m,
+          );
+          renderMessages();
+          setStatus('Feedback saved');
+        } catch (err) {
+          console.error(err);
+          // Revert optimistic update on failure
+          state.messages = state.messages.map((m) =>
+            Number(m.id) === targetId
+              ? { ...m, feedback: prevFeedback }
+              : m,
+          );
+          renderMessages();
+          setStatus('Feedback failed', true);
+        }
+      }
+
+      async function sendMessage(event) {
+        event.preventDefault();
+        if (state.sending) return;
+        const text = dom.messageInput.value.trim();
+        if (!text || !state.selectedPersonality) return;
+        state.sending = true;
+        dom.sendBtn.disabled = true;
+        setStatus('Sending...');
+
+        const userMessage = {
+          id: `local-${Date.now()}`,
+          sender: 'user',
+          content: text,
+          text,
+        };
+        state.messages.push(userMessage);
+        renderMessages();
+
+        try {
+          const response = await fetchJson(
+            `/chat/${state.selectedPersonality.slug}`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                message: text,
+                userId: state.userId,
+                conversationId: state.conversationId,
+              }),
+            },
+          );
+          state.conversationId =
+            response.conversationId || state.conversationId;
+          const aiMessage = {
+            id: response.messageId,
+            sender: 'ai',
+            content: response.text,
+            text: response.text,
+            feedback: null,
+          };
+          state.messages.push(aiMessage);
+          dom.messageInput.value = '';
+          renderMessages();
+          // Re-sync to pick up canonical user message ids
+          await refreshMessages();
+          setStatus('Ready');
+        } catch (err) {
+          console.error(err);
+          setStatus('Send failed', true);
+        } finally {
+          state.sending = false;
+          dom.sendBtn.disabled = false;
+        }
+      }
+
+      async function onPersonalityChange() {
+        const slug = dom.personalitySelect.value;
+        state.selectedPersonality = state.personalityBySlug[slug];
+        state.conversationId = null;
+        state.messages = [];
+        renderMessages();
+        await ensureConversation();
+      }
+
+      async function startNewConversation() {
+        if (!state.selectedPersonality) return;
+        try {
+          setStatus('Starting new conversation...');
+          const created = await fetchJson('/conversation', {
+            method: 'POST',
+            body: JSON.stringify({
+              userId: state.userId,
+              personalityId: state.selectedPersonality.id,
+            }),
+          });
+          state.conversationId = created?.id || null;
+          state.messages = [];
+          renderMessages();
+          await refreshMessages();
+          setStatus('Ready');
+        } catch (err) {
+          console.error(err);
+          setStatus('Could not start conversation', true);
+        }
+      }
+
+      function slugify(text) {
+        return (text || '')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      function renderModelOptions() {
+        dom.creatorModel.innerHTML = '';
+        (state.options.models || []).forEach((m) => {
+          const opt = document.createElement('option');
+          opt.value = m.name;
+          opt.textContent = `${m.label || m.name} (${m.provider || 'model'})`;
+          dom.creatorModel.appendChild(opt);
+        });
+        if (!state.creation.model && state.options.models?.length) {
+          state.creation.model = state.options.models[0].name;
+          dom.creatorModel.value = state.creation.model;
+        }
+      }
+
+      function renderTraitChoices() {
+        dom.traitChoices.innerHTML = '';
+        (state.options.traitPresets || []).forEach((t) => {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = 'pill';
+          pill.innerHTML = `<span class="title">${t.label}</span><span class="sub">${t.description}</span>`;
+          const active = state.creation.traits.includes(t.key);
+          if (active) pill.classList.add('active');
+          pill.onclick = () => toggleTrait(t.key);
+          dom.traitChoices.appendChild(pill);
+        });
+      }
+
+      function renderAppearanceChoices() {
+        dom.appearanceChoices.innerHTML = '';
+        (state.options.appearancePresets || []).forEach((a) => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'appearance-card';
+          const active = state.creation.appearancePreset === a.id;
+          if (active) card.classList.add('active');
+          card.style.borderColor = active
+            ? a.accentColor || 'var(--accent)'
+            : '';
+          card.innerHTML = `
+          <div style="font-weight:600;">${a.avatar || '✨'} ${a.label}</div>
+          <div class="helper">${a.description}</div>
+        `;
+          card.onclick = () => {
+            state.creation.appearancePreset = a.id;
+            if (!state.creation.accentColor) {
+              state.creation.accentColor = a.accentColor || '';
+              dom.creatorAccent.value = state.creation.accentColor;
+            }
+            renderAppearanceChoices();
+          };
+          dom.appearanceChoices.appendChild(card);
+        });
+      }
+
+      function toggleTrait(key) {
+        const idx = state.creation.traits.indexOf(key);
+        if (idx >= 0) {
+          state.creation.traits.splice(idx, 1);
+        } else {
+          state.creation.traits.push(key);
+        }
+        renderTraitChoices();
+      }
+
+      function updateSlugPreview() {
+        const slug =
+          dom.creatorSlug.value.trim() ||
+          slugify(dom.creatorName.value.trim()) ||
+          'auto';
+        dom.slugPreview.textContent = `slug: ${slug}`;
+      }
+
+      async function submitCreator(event) {
+        event.preventDefault();
+        if (state.creating) return;
+        const name = dom.creatorName.value.trim();
+        const basePrompt = dom.creatorPrompt.value.trim();
+        if (!name || !basePrompt) {
+          dom.creatorStatus.textContent = 'Name and base prompt are required.';
+          dom.creatorStatus.style.color = 'var(--danger)';
+          return;
+        }
+
+        state.creating = true;
+        dom.creatorSubmit.disabled = true;
+        dom.creatorStatus.style.color = 'var(--muted)';
+        dom.creatorStatus.textContent = 'Creating...';
+
+        const payload = {
+          name,
+          slug: dom.creatorSlug.value.trim() || undefined,
+          model: dom.creatorModel.value,
+          basePrompt,
+          description: dom.creatorDescription.value.trim() || undefined,
+          accentColor: dom.creatorAccent.value.trim() || undefined,
+          avatar: dom.creatorAvatar.value.trim() || undefined,
+          traits: state.creation.traits,
+          appearancePreset: state.creation.appearancePreset || undefined,
+        };
+
+        try {
+          const created = await fetchJson('/personalities', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+          state.creation = {
+            name: '',
+            slug: '',
+            model: state.options.models?.[0]?.name || '',
+            basePrompt: '',
+            description: '',
+            accentColor: '',
+            avatar: '',
+            traits: [],
+            appearancePreset: '',
+          };
+          dom.creatorForm.reset();
+          updateSlugPreview();
+          dom.creatorStatus.textContent = 'Created! Selecting...';
+          await loadPersonalities();
+          dom.personalitySelect.value = created.slug;
+          await onPersonalityChange();
+          dom.creatorStatus.textContent = 'Ready to chat with new personality.';
+        } catch (err) {
+          console.error(err);
+          dom.creatorStatus.textContent =
+            'Create failed. ' + (err?.message || '');
+          dom.creatorStatus.style.color = 'var(--danger)';
+        } finally {
+          state.creating = false;
+          dom.creatorSubmit.disabled = false;
+        }
+      }
+
+      function toggleCreator() {
+        const visible = dom.creatorCard.style.display !== 'none';
+        dom.creatorCard.style.display = visible ? 'none' : 'block';
+        dom.toggleCreatorBtn.textContent = visible
+          ? 'New personality'
+          : 'Close creator';
+      }
+
+      async function bootstrap() {
+        setStatus('Loading...');
+        await loadTheme();
+        await loadCreatorOptions();
+        await loadPersonalities();
+        await ensureConversation();
+        setStatus('Ready');
+      }
+
+      dom.composerForm.addEventListener('submit', sendMessage);
+      dom.personalitySelect.addEventListener('change', onPersonalityChange);
+      dom.newConversationBtn.addEventListener('click', startNewConversation);
+      dom.creatorForm.addEventListener('submit', submitCreator);
+      dom.creatorName.addEventListener('input', updateSlugPreview);
+      dom.creatorSlug.addEventListener('input', updateSlugPreview);
+      dom.toggleCreatorBtn.addEventListener('click', toggleCreator);
+
+      bootstrap().catch((err) => {
+        console.error(err);
+        setStatus('Failed to load', true);
+      });
+    </script>
+  </body>
+</html>

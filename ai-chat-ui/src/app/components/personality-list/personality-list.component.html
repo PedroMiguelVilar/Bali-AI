@@ -1,0 +1,147 @@
+<div class="min-h-screen theme-bg theme-text">
+  <div class="max-w-6xl px-6 py-12 mx-auto space-y-10">
+    <header class="space-y-3 md:space-y-4">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="space-y-2">
+          <p class="uppercase tracking-[0.3em] text-xs theme-muted">
+            Choose your guide
+          </p>
+          <h1 class="text-4xl font-semibold">Pick a personality to talk to</h1>
+          <p class="max-w-3xl text-base theme-muted">
+            Each companion has a different tone and purpose. Browse the roster below
+            and jump into a chat that matches your mood.
+          </p>
+        </div>
+        <div class="theme-bar align-right">
+          <div class="flex items-center gap-3 flex-wrap justify-end">
+            <button
+              type="button"
+              class="px-4 py-2 text-sm font-semibold rounded-full border border-red-400 text-red-100 bg-red-500/10 hover:bg-red-500/20 hover:-translate-y-0.5 transition-all disabled:opacity-50"
+              (click)="resetEverything()"
+              [disabled]="isResetting"
+            >
+              {{ isResetting ? 'Resetting...' : 'Reset data' }}
+            </button>
+            <a
+              routerLink="/personalities/new"
+              class="px-4 py-2 text-sm font-semibold rounded-full border theme-border theme-panel hover:-translate-y-0.5 transition-all"
+            >
+              New personality
+            </a>
+            <app-theme-menu></app-theme-menu>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div *ngIf="errorMessage" class="p-4 mb-6 text-sm theme-panel theme-border border rounded-xl">
+      {{ errorMessage }}
+    </div>
+    <div
+      *ngIf="resetMessage"
+      class="p-4 mb-6 text-sm rounded-xl border border-amber-300/60 bg-amber-500/10 text-amber-50"
+    >
+      {{ resetMessage }}
+    </div>
+
+    <div *ngIf="isLoading" class="flex items-center justify-center py-16 text-lg theme-muted">
+      Loading personalities...
+    </div>
+
+    <div *ngIf="!isLoading && personalities.length" class="grid gap-6 sm:grid-cols-2">
+      <div
+        *ngFor="let personality of personalities; trackBy: trackBySlug"
+        class="card-shell"
+        [class.flipped]="isFlipped(personality)"
+      >
+        <div class="card-inner">
+          <div
+            class="card-face front theme-panel theme-border border rounded-3xl p-6 text-left cursor-pointer group"
+            (click)="goToChat(personality)"
+          >
+            <div class="flex justify-between items-start">
+              <p class="text-xs tracking-[0.4em] uppercase theme-muted">Personality</p>
+              <button
+                type="button"
+                class="text-xs px-3 py-1 rounded-full border theme-border theme-panel hover:-translate-y-0.5 transition"
+                (click)="toggleFlip(personality, $event)"
+              >
+                Flip
+              </button>
+            </div>
+            <h2 class="mt-2 text-2xl font-semibold group-hover:translate-x-0.5 transition-transform">
+              {{ personality.name }}
+            </h2>
+            <p class="mt-4 text-sm theme-muted min-h-[72px]">
+              {{ getPromptPreview(personality) }}
+            </p>
+            <p class="mt-4 text-xs theme-muted">
+              Model: {{ personality.model || 'Not specified' }}
+            </p>
+            <span
+              class="inline-flex items-center gap-1 mt-6 text-sm font-semibold theme-accent group-hover:translate-x-1 transition-transform"
+            >
+              Start chatting
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="h-4 w-4"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3"
+                />
+              </svg>
+            </span>
+          </div>
+
+          <div
+            class="card-face back theme-panel theme-border border rounded-3xl p-6 flex flex-col gap-4"
+            (click)="toggleFlip(personality, $event)"
+          >
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-semibold">{{ personality.name }}</h3>
+              <button
+                type="button"
+                class="text-xs px-3 py-1 rounded-full border theme-border theme-panel"
+              >
+                Back
+              </button>
+            </div>
+            <p class="text-sm theme-muted">
+              Quick actions for {{ personality.slug }}
+            </p>
+            <div class="flex gap-3 flex-wrap">
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg border theme-border theme-panel hover:-translate-y-0.5 transition"
+                (click)="goToEdit(personality, $event)"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                class="px-4 py-2 rounded-lg border theme-border theme-panel text-red-300 hover:-translate-y-0.5 transition"
+                [disabled]="deletingSlug === personality.slug"
+                (click)="confirmDelete(personality, $event)"
+              >
+                {{ deletingSlug === personality.slug ? 'Deleting...' : 'Delete' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="!isLoading && !personalities.length && !errorMessage"
+      class="py-16 text-center theme-muted"
+    >
+      No personalities available yet. Seed the database to get started.
+    </div>
+  </div>
+</div>
