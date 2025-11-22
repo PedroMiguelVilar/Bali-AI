@@ -9,12 +9,21 @@ Full-stack chat assistant with a NestJS backend, Angular frontend, and Ollama fo
 
 Think of this as a starter: swap in your own models, prompts, traits, and themes to make it whatever you want it to be.
 
-## UI preview
+## UI Preview
 
-![Personality roster](images/figma/Screenshot-2025-11-22-15-49-56.png)
-![Chat view](images/figma/Screenshot-2025-11-22-16-07-33.png)
-![Chat with drawer open](images/figma/Screenshot-2025-11-22-16-07-43.png)
-![Edit personality](images/figma/Screenshot-2025-11-22-16-08-10.png)
+Design / Overview (figma mock slides):
+
+![Project flow: import models → create personalities → start chatting](images/figma/edit-personality.png)
+![Selling points: privacy, long-term memory, multiple conversations, local models](images/figma/chat-view.png)
+![Theme chooser showcase](images/figma/theme-choose.png)
+![Personality roster](images/figma/personality-roster.png)
+![Conversation drawer open](images/figma/chat-drawer-open.png)
+
+Live App Screenshots (running instance):
+
+![Open chat](images/showcase/open_chat.png)
+![Open menu](images/showcase/open_menu.png)
+![Edit personality screen](images/showcase/edit_personality.png)
 
 ## Prerequisites
 
