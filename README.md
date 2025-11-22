@@ -13,11 +13,9 @@ Think of this as a starter: swap in your own models, prompts, traits, and themes
 
 Design / Overview (figma mock slides):
 
-![Project flow: import models → create personalities → start chatting](images/figma/edit-personality.png)
 ![Selling points: privacy, long-term memory, multiple conversations, local models](images/figma/chat-view.png)
+![Project flow: import models → create personalities → start chatting](images/figma/edit-personality.png)
 ![Theme chooser showcase](images/figma/theme-choose.png)
-![Personality roster](images/figma/personality-roster.png)
-![Conversation drawer open](images/figma/chat-drawer-open.png)
 
 Live App Screenshots (running instance):
 
@@ -104,4 +102,4 @@ POST http://localhost:3000/maintenance/reset
 - Message feedback (good/bad) is stored but does not yet alter model behavior (WIP).
 - Fully local: API, DB, and models run locally; no external calls once dependencies are installed.
 - Export conversations for debugging or sharing.
-- Reset endpoint to wipe conversations/messages/personas while keeping users intact.
+- Reset endpoint wipes ALL conversations, messages, personalities, long-term memory entries (users remain). Use with caution — this is destructive and cannot be undone.
